@@ -47,6 +47,10 @@ class MrtdNfcChipAccess(private val shouldCheckMac: Boolean) {
             is MrtdAccessDataPin -> PACEKeySpec(accessData.pinCode, PassportService.PIN_PACE_KEY_REFERENCE)
         }
 
+        // Low level NFC processor cannot process SELECT EF from MF commands. This is because the
+        //  system doesn't know which AID should process the command
+        service.sendSelectApplet(false)
+
         var hasPaceSucceeded = false
         try {
             mrtdLogI(TAG, "reading EF_CARD_ACCESS")
@@ -81,7 +85,9 @@ class MrtdNfcChipAccess(private val shouldCheckMac: Boolean) {
             }
         }
 
-        service.sendSelectApplet(hasPaceSucceeded)
+        // Low level NFC processor cannot process SELECT of DTC application if the SELECT is secured.
+        //  This is because AID to SELECT is encrypted and system cannot decrypt it
+        service.sendSelectApplet(false)
 
         if (!hasPaceSucceeded && accessKeySpec is BACKey) {
             mrtdLogI(TAG, "attempting BAC")

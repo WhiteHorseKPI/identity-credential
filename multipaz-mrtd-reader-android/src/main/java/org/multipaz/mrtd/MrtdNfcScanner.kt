@@ -89,7 +89,12 @@ class MrtdNfcScanner(private val mActivity: Activity) {
                                 onStatus(status)
                             }
                         }
-                        val cardService = CardService.getInstance(IsoDep.get(tag))
+                        // Google Wallet drops the connection during reading of a large Data Group.
+                        //  This is because default timeout for response is less than time when
+                        //  DTC holder reads document from applet
+                        val isoDep = IsoDep.get(tag)
+                        isoDep.timeout = 3000
+                        val cardService = CardService.getInstance(isoDep)
                         Log.i(TAG, "Got card service")
                         val passportService: PassportService? = if (accessData != null) {
                             val nfcReader = MrtdNfcChipAccess(false)  // TODO: enable mac?
